@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 class UserEntity {
   final String id;

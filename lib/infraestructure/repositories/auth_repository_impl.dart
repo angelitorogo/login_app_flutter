@@ -1,6 +1,4 @@
 import 'dart:typed_data';
-
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:login_app/domain/datasources/auth_datasource.dart';
 import 'package:login_app/domain/entities/user.dart';
