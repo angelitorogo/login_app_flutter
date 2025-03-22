@@ -146,38 +146,6 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                 trackNotifier.startTracking();
               } else {
 
-                /*
-                if (Platform.isAndroid) {
-                  // Verifica el permiso especial claramente (gestionar almacenamiento)
-                  if (!(await Permission.manageExternalStorage.isGranted)) {
-                    // Abre directamente la pantalla específica del sistema para permisos especiales
-                    await openAppSettings(); 
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Activa 'Gestionar todos los archivos' en ajustes")),
-                      );
-                    }
-                    return;
-                  }
-                }
-                */
-
-                /*
-                // Manejo correcto del permiso especial en Android 11+
-                if (Platform.isAndroid && await Permission.manageExternalStorage.isDenied) {
-                  // Redirige claramente al usuario a configuración manual
-                  final result = await openAppSettings();
-                  if (!result) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Debes otorgar permiso manualmente en ajustes")),
-                      );
-                    }
-                    return;
-                  }
-                  return; // Espera a que el usuario vuelva después de otorgar el permiso
-                }
-                */
 
                 await trackNotifier.stopTrackingAndSaveGpx();
                 if (mounted) {
@@ -198,38 +166,3 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
 
 
 
-/* old
-
-FloatingActionButton(
-            heroTag: 'trackingButton',
-            backgroundColor: trackState.isTracking ? Colors.red : Colors.green,
-            onPressed: () async {
-              if (!trackState.isTracking) {
-                final locationGranted = await checkLocationPermission();
-                if (!locationGranted) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Debes otorgar el permiso de ubicación"),
-                      ),
-                    );
-                  }
-                  return;
-                }
-                trackNotifier.startTracking();
-              } else {
-                 
-
-                final file = await trackNotifier.stopTrackingAndSaveGpx();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Track guardado en: ${file.path}")),
-                  );
-                }
-              }
-            },
-
-            child: Icon(trackState.isTracking ? Icons.stop : Icons.play_arrow),
-          ),
-
-*/
