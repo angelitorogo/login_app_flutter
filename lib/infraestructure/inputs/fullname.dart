@@ -22,7 +22,7 @@ class Fullname extends FormzInput<String, FullnameValidationError> {
   @override
   FullnameValidationError? validator(String value) {
     if (value.isEmpty) return FullnameValidationError.empty;
-    if (value.length < 3) return FullnameValidationError.tooShort;
+    if (value.length < 2) return FullnameValidationError.tooShort;
     return null;
   }
 }

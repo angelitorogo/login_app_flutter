@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:login_app/domain/entities/user.dart';
+import 'package:login_app/infraestructure/models/user_updated_response.dart';
 import 'package:login_app/infraestructure/repositories/auth_repository_impl.dart';
 import 'package:login_app/presentation/providers/auth/auth_repository_provider.dart';
 import 'package:login_app/presentation/providers/forms/login_notifier.dart';
+import 'package:login_app/presentation/providers/forms/profile_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
@@ -68,20 +70,53 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> updateUser(ProfileFormState profileState, WidgetRef ref) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
 
-  void updateUser(UserEntity updatedUser) {
-    state = state.copyWith(user: updatedUser);
+     try {
+      final updatedUser  = UserEntity(
+        id: ref.read(authProvider).user!.id, 
+        email: profileState.email.value,
+        fullname: profileState.fullname.value,
+        role: ref.read(authProvider).user!.role,
+        telephone: profileState.telephone.value,
+        image: profileState.image,
+        active: ref.read(authProvider).user!.active,
+        theme: ref.read(authProvider).user!.theme,
+        language: ref.read(authProvider).user!.language,
+      );
+
+      final UserUpdatedResponse userUpdated  = await authRepository.updateUser(updatedUser );
+
+      //print("📤 Respuesta del backend: ${userUpdated}");
+
+      final UserEntity userTempUpdated = UserEntity(
+        id: userUpdated.id,
+        active: userUpdated.active,
+        email: userUpdated.email,
+        fullname: userUpdated.fullname,
+        language: userUpdated.language,
+        role: userUpdated.role,
+        theme: userUpdated.theme,
+        image: userUpdated.image,
+        telephone: userUpdated.telephone
+      );
+      
+      state = state.copyWith(isLoading: false, user: userTempUpdated);
+      ref.read(profileProvider.notifier).resetForm(userTempUpdated);
+
+    } catch (error) {
+      state = state.copyWith(isLoading: false, errorMessage: error.toString());
+    }
+
   }
 
-
-  // ✅ Guardar sesión en SharedPreferences después del login
   Future<void> saveSession(UserEntity user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user', jsonEncode(user.toJson())); // Asegúrate de que `UserEntity` tenga un método `toJson`
     await prefs.setBool('isAuthenticated', true);
   }
 
-  // ✅ Eliminar sesión de SharedPreferences al hacer logout
   Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user');
@@ -90,6 +125,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> login(BuildContext context, String email, String password) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
+
+    email = 'angelitorogo@hotmail.com'; //para no tener que escribir email y password mientras dure el desarrollo
+    password = 'Rod00gom!'; //para no tener que escriboir email y password mientras dure el desarrollo
 
     try {
       final result = await authRepository.login(context, email, password);
@@ -100,7 +138,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         formNotifier.resetForm();
         state = state.copyWith(isAuthenticated: true, isLoading: false);
         if (context.mounted) {
-          GoRouter.of(context).go('/core');
+          GoRouter.of(context).go('/');
         }
       } else {
         // ✅ Asegurar que el estado de autenticación es FALSO si el login falla
@@ -121,7 +159,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
     }
   }
-
 
   Future<void> fetchCsrfToken() async {
     state = state.copyWith(isLoading: true);

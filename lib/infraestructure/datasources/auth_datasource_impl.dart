@@ -214,7 +214,7 @@ Future<UserUpdatedResponse> updateUser(UserEntity user) async {
   );
 
   if (response.statusCode != 200) {
-    throw Exception("Error al actualizar el usuario");
+    throw Exception(response.data['message']);
   }
 
   final UserUpdatedResponse userUpdated = UserUpdatedResponse(

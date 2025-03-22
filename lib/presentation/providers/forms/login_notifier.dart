@@ -63,20 +63,6 @@ class LoginNotifier extends StateNotifier<LoginFormState> {
     );
   }
 
-  void submit() {
-    final newStatus = _validateForm();
-    if (newStatus == FormzSubmissionStatus.success) {
-      //print('✅ Formulario enviado: ${state.email.value}, ${state.password.value}');
-      resetForm();
-      state = state.copyWith(status: FormzSubmissionStatus.success);
-    } else {
-      state = state.copyWith(
-        status: FormzSubmissionStatus.failure,
-        emailTouched: true,
-        passwordTouched: true,
-      );
-    }
-  }
 
   void resetForm() {
     state = const LoginFormState(

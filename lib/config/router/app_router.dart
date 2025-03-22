@@ -4,46 +4,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:login_app/presentation/providers/auth/auth_provider.dart';
 import 'package:login_app/presentation/screens/auth/login_screen.dart';
-import 'package:login_app/presentation/screens/core/logado/logado_screen.dart';
-import 'package:login_app/presentation/screens/core/no_logado/no_logado_screen.dart';
+import 'package:login_app/presentation/screens/core/home/home_screen.dart';
 import 'package:login_app/presentation/screens/core/profile/profile_screen.dart';
-import 'package:login_app/presentation/screens/core/prueba/prueba_screen.dart';
+import 'package:login_app/presentation/screens/map_tracking/map_tracking_screen.dart';
+import 'package:login_app/presentation/views/config/config_view.dart';
+import 'package:login_app/presentation/views/home/home_view.dart';
+import 'package:login_app/presentation/views/map/map_view.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/core', 
+  initialLocation: '/', 
   routes: [
     // State-Preserving
-    /*
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) => HomeScreen(childView: navigationShell),
       branches: [
         
         StatefulShellBranch(
           routes: [
-
             GoRoute(
               path: '/',
-              builder: (context, state) => const HomeView(),
-              routes: [
-                GoRoute(
-                    path: 'movie/:id',
-                    name: MovieScreen.name,
-                    builder: (context, state) {
-                      final movieId = state.pathParameters['id'] ?? 'no-id';
-                      return MovieScreen(movieId: movieId);
-                    },
-                  ),
-              ]
-            ),
-
-        ]),
-
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/categories',
               builder: (context, state) {
-                return const CategoriesView();
+                return const HomeView();
               },
             )
         ]),
@@ -51,14 +32,70 @@ final appRouter = GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: '/favorites',
+              path: '/map',
               builder: (context, state) {
-                return const FavouriteView();
+                return const MapView();
               },
             )
         ]),
-      ]),*/
 
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/config',
+              builder: (context, state) {
+                return const ConfigView();
+              },
+            )
+        ]),
+      ]),
+
+      GoRoute(
+        path: '/login',
+        name: LoginScreen.name,
+        builder: (context, state) => const LoginScreen(),
+      ),  
+
+      GoRoute(
+        path: '/profile',
+        name: ProfileScreen.name,
+        builder: (context, state) {
+          // ✅ Obtenemos el estado de autenticación usando ProviderScope.of()
+          final authState = ProviderScope.containerOf(context).read(authProvider);
+
+          // 🔒 Si el usuario NO está autenticado, lo enviamos a /login
+          if (!authState.isAuthenticated) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              GoRouter.of(context).go('/login');
+            });
+            return const SizedBox(); // Devolvemos un widget vacío mientras redirige
+          }
+
+          return const ProfileScreen(); // ✅ Si está autenticado, accede a la ruta
+        },
+      ),
+
+      GoRoute(
+        path: '/track-map',
+        name: MapTrackingScreen.name,
+        builder: (context, state) {
+          // ✅ Obtenemos el estado de autenticación usando ProviderScope.of()
+          final authState = ProviderScope.containerOf(context).read(authProvider);
+
+          // 🔒 Si el usuario NO está autenticado, lo enviamos a /login
+          if (!authState.isAuthenticated) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              GoRouter.of(context).go('/login');
+            });
+            return const SizedBox(); // Devolvemos un widget vacío mientras redirige
+          }
+
+          return const MapTrackingScreen(); // ✅ Si está autenticado, accede a la ruta
+        },
+      ),
+
+
+    /*
     GoRoute(
       path: '/login',
       name: LoginScreen.name,
@@ -71,6 +108,11 @@ final appRouter = GoRouter(
       builder: (context, state) => const PruebaScreen(),
     ), 
 
+    GoRoute(
+      path: '/home',
+      name: HomeScreen.name,
+      builder: (context, state) => const HomeScreen(),
+    ), 
     GoRoute(
       path: '/protegida',
       name: LogadoScreen.name,
@@ -114,6 +156,7 @@ final appRouter = GoRouter(
       name: NoLogadoScreen.name,
       builder: (context, state) => const NoLogadoScreen(),
     ),    
+    */
 
 
 ]);

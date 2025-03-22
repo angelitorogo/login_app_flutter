@@ -1,10 +1,8 @@
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:formz/formz.dart';
 import 'package:login_app/domain/entities/user.dart';
 import 'package:login_app/infraestructure/inputs/inputs.dart';
-import 'package:login_app/infraestructure/models/user_updated_response.dart';
 import 'package:login_app/infraestructure/repositories/auth_repository_impl.dart';
 import 'package:login_app/presentation/providers/auth/auth_provider.dart';
 import 'package:login_app/presentation/providers/auth/auth_repository_provider.dart';
@@ -24,9 +22,12 @@ final profileProvider = StateNotifierProvider<ProfileNotifier, ProfileFormState>
 /// 📌 Estado del formulario de perfil
 class ProfileFormState {
   final Email email;
+  final bool emailTouched;
   final Fullname fullname;
+  final bool fullnameTouched;
   final Role role;
   final Telephone telephone;
+  final bool telephoneTouched;
   final Active active;
   final Language language;
   final ThemeInput theme;
@@ -38,14 +39,17 @@ class ProfileFormState {
 
   const ProfileFormState({
     this.email = const Email.pure(),
+    this.emailTouched = false,
     this.fullname = const Fullname.pure(),
+    this.fullnameTouched = false,
     this.role = const Role.pure(),
     this.telephone = const Telephone.pure(),
+    this.telephoneTouched = false,
     this.active = const Active.pure(),
     this.language = const Language.pure(),
     this.theme = const ThemeInput.pure(),
     this.image = '',
-    this.status = FormzSubmissionStatus.initial,
+    this.status = FormzSubmissionStatus.success, // como todos los inputs tienen datos iniciales, ponemos que el formulario de inicio ya es valido
     this.isLoading = false,
     this.errorMessage,
     this.isNewImage = false
@@ -53,9 +57,12 @@ class ProfileFormState {
 
   ProfileFormState copyWith({
     Email? email,
+    bool? emailTouched,
     Fullname? fullname,
+    bool? fullnameTouched,
     Role? role,
     Telephone? telephone,
+    bool? telephoneTouched,
     Active? active,
     Language? language,
     ThemeInput? theme,
@@ -67,9 +74,12 @@ class ProfileFormState {
   }) {
     return ProfileFormState(
       email: email ?? this.email,
+      emailTouched: emailTouched ?? this.emailTouched,
       fullname: fullname ?? this.fullname,
+      fullnameTouched: fullnameTouched ?? this.fullnameTouched,
       role: role ?? this.role,
       telephone: telephone ?? this.telephone,
+      telephoneTouched: telephoneTouched ?? this.telephoneTouched,
       active: active ?? this.active,
       language: language ?? this.language,
       theme: theme ?? this.theme,
@@ -119,52 +129,7 @@ class ProfileNotifier extends StateNotifier<ProfileFormState> {
     }
   }
 
-
-  Future<void> updateUser(BuildContext context) async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
-
-    try {
-      final updatedUser  = UserEntity(
-        id: ref.read(authProvider).user!.id, 
-        email: state.email.value,
-        fullname: state.fullname.value,
-        role: state.role.value,
-        telephone: state.telephone.value.isEmpty ? null : state.telephone.value,
-        image: state.image, // 🔥 Ahora es un archivo, no Base64
-        active: state.active.value,
-        theme: state.theme.value,
-        language: state.language.value,
-      );
-
-      final UserUpdatedResponse userUpdated  = await authRepository.updateUser(updatedUser );
-
-      //print("📤 Respuesta del backend: ${userUpdated}");
-
-      final UserEntity userTempUpdated = UserEntity(
-        id: userUpdated.id,
-        active: userUpdated.active,
-        email: userUpdated.email,
-        fullname: userUpdated.fullname,
-        language: userUpdated.language,
-        role: userUpdated.role,
-        theme: userUpdated.theme,
-        image: userUpdated.image,
-        telephone: userUpdated.telephone
-      );
-      
-      
-      //actualizar en authState
-      ref.read(authProvider.notifier).updateUser(userTempUpdated);
-
-
-      if (mounted) {
-        state = state.copyWith(isLoading: false, isNewImage: false);
-      }
-    } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: 'Error al actualizar el perfil');
-    }
-  }
-
+  
   void resetUserProfile() {
     final user = ref.read(authProvider).user;
     if (user != null) {
@@ -178,6 +143,7 @@ class ProfileNotifier extends StateNotifier<ProfileFormState> {
     final email = Email.dirty(value);
     state = state.copyWith(
       email: email,
+      emailTouched: true,
       status: _validateForm(),
     );
   }
@@ -186,14 +152,7 @@ class ProfileNotifier extends StateNotifier<ProfileFormState> {
     final fullname = Fullname.dirty(value);
     state = state.copyWith(
       fullname: fullname,
-      status: _validateForm(),
-    );
-  }
-
-  void roleChanged(String value) {
-    final role = Role.dirty(value);
-    state = state.copyWith(
-      role: role,
+      fullnameTouched: true,
       status: _validateForm(),
     );
   }
@@ -202,46 +161,11 @@ class ProfileNotifier extends StateNotifier<ProfileFormState> {
     final telephone = Telephone.dirty(value);
     state = state.copyWith(
       telephone: telephone,
+      telephoneTouched: true,
       status: _validateForm(),
     );
   }
 
-  void activeChanged(bool value) {
-    final active = Active.dirty(value);
-    state = state.copyWith(
-      active: active,
-      status: _validateForm(),
-    );
-  }
-
-  void languageChanged(String? value) {
-    final language = Language.dirty(value ?? '');
-    state = state.copyWith(
-      language: language,
-      status: _validateForm(),
-    );
-  }
-
-  void themeChanged(int value) {
-    final theme = ThemeInput.dirty(value);
-    state = state.copyWith(
-      theme: theme,
-      status: _validateForm(),
-    );
-  }
-
-  /// 📌 Método para validar el formulario
-  FormzSubmissionStatus _validateForm() {
-    return Formz.validate([
-      state.fullname,
-      state.role,
-      state.telephone,
-      state.language,
-      state.email
-    ])
-        ? FormzSubmissionStatus.success
-        : FormzSubmissionStatus.failure;
-  }
 
   /// 🔥 Método para resetear el formulario
   void resetForm(UserEntity user) {
@@ -253,6 +177,16 @@ class ProfileNotifier extends StateNotifier<ProfileFormState> {
       active: Active.dirty(user.active),
       language: Language.dirty(user.language),
       theme: ThemeInput.dirty(user.theme),
+      image: user.image,
+      isNewImage: false
     );
   }
+
+    FormzSubmissionStatus _validateForm() {
+    return Formz.validate([state.email, state.fullname, state.telephone])
+        ? FormzSubmissionStatus.success
+        : FormzSubmissionStatus.failure;
+  }
+
 }
+

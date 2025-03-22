@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:formz/formz.dart';
 import 'package:login_app/infraestructure/inputs/inputs.dart';
 import 'package:login_app/presentation/providers/auth/auth_provider.dart';
 import 'package:login_app/presentation/providers/forms/login_notifier.dart';
@@ -126,9 +125,19 @@ class _LoginForm extends ConsumerWidget {
                 ),
               ),
 
+              //para no tener que escriboir email y password mientras dure el desarrollo y no deshabilite el boton de login
+              onPressed: () async {
+                      await authNotifier.login(
+                        context,
+                        loginState.email.value,
+                        loginState.password.value,
+                      );
+                    },
+
+              /*
               onPressed: authState.isLoading ||
                       loginState.status != FormzSubmissionStatus.success
-                  ? null
+                  /? null
                   : () async {
                       await authNotifier.login(
                         context,
@@ -136,6 +145,7 @@ class _LoginForm extends ConsumerWidget {
                         loginState.password.value,
                       );
                     },
+              */
               icon: const Icon(Icons.login, size: 30, color: Colors.white,),
               label: const Text('Login', style: TextStyle(fontSize: 17)),
             ),

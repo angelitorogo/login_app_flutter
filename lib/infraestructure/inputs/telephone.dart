@@ -21,7 +21,7 @@ class Telephone extends FormzInput<String, TelephoneValidationError> {
 
   @override
   TelephoneValidationError? validator(String value) {
-    final phoneRegex = RegExp(r'^[0-9]{9,15}$');
+    final phoneRegex = RegExp(r'^[0-9]{8,9}$');
     if (value.isEmpty) return TelephoneValidationError.empty;
     if (!phoneRegex.hasMatch(value)) return TelephoneValidationError.invalid;
     return null;
