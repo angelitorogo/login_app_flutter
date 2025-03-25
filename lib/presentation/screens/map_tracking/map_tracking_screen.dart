@@ -177,11 +177,26 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
           FloatingActionButton(
             heroTag: 'trackingButton',
             backgroundColor: (trackState.isTracking) ? Colors.red : Colors.green,
-            onPressed: () async {
+                        onPressed: () async {
               if (!trackState.isTracking) {
+                // 🔐 Solicita permisos antes de arrancar
                 if (!await Permission.locationAlways.isGranted) {
                   await Permission.locationAlways.request();
                 }
+
+                final location = Location();
+                bool serviceEnabled = await location.serviceEnabled();
+                if (!serviceEnabled) {
+                  serviceEnabled = await location.requestService();
+                  if (!serviceEnabled) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Activa el GPS para comenzar a grabar.")),
+                    );
+                    return;
+                  }
+                }
+
+                print('🟢 Iniciando tracking');
                 trackNotifier.startTracking();
 
                 FlutterForegroundTask.init(
@@ -189,8 +204,8 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                     channelId: 'tracking_channel',
                     channelName: 'Grabando Track GPS',
                     channelDescription: 'Grabando ruta en segundo plano.',
-                    channelImportance: NotificationChannelImportance.LOW,
-                    priority: NotificationPriority.LOW,
+                    channelImportance: NotificationChannelImportance.HIGH,
+                    priority: NotificationPriority.HIGH,
                     iconData: const NotificationIconData(
                       resType: ResourceType.mipmap,
                       resPrefix: ResourcePrefix.ic,
@@ -206,18 +221,21 @@ class _MapTrackingScreenState extends ConsumerState<MapTrackingScreen> {
                   notificationText: 'Grabando ruta GPS...',
                   callback: startCallback,
                 );
-
               } else {
+                print('🔴 Deteniendo tracking');
                 await trackNotifier.stopTrackingAndSaveGpx();
                 FlutterForegroundTask.stopService();
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Track guardado en carpeta GPX en Downloads")),
                 );
               }
             },
+
             child: Icon(trackState.isTracking ? Icons.stop : Icons.play_arrow),
           ),
-                    
+
+                              
 
         ],
       ),

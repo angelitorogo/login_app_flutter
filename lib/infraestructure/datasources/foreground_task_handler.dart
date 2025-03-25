@@ -1,55 +1,64 @@
+// path: lib/infraestructure/datasources/foreground_task_handler.dart
+
 import 'dart:async';
 import 'dart:isolate';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:location/location.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:login_app/domain/entities/location_point.dart';
 
 class ForegroundTaskHandler extends TaskHandler {
-  StreamSubscription<LocationData>? _locationSubscription;
-  final Location _location = Location();
-
-  static final StreamController<LocationPoint> locationStreamController = StreamController.broadcast();
+  StreamSubscription<Position>? _positionSubscription;
+  static final StreamController<LocationPoint> locationStreamController =
+      StreamController<LocationPoint>.broadcast();
 
   @override
   Future<void> onStart(DateTime timestamp, SendPort? sendPort) async {
-    print('🟡 ForegroundTaskHandler.onStart() INICIADO');
+    print("🟡 ForegroundTaskHandler.onStart() INICIADO");
 
     try {
-      _location.changeSettings(interval: 5000, distanceFilter: 5);
-      print('✅ Configuración de ubicación cambiada');
+      // Permiso y configuración deben haberse hecho previamente en UI thread
 
-      _locationSubscription = _location.onLocationChanged.listen((locData) {
-        print('📍 Punto recibido: ${locData.latitude}, ${locData.longitude}');
+      const locationSettings = LocationSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 5,
+        timeLimit: null,
+      );
+
+      _positionSubscription =
+          Geolocator.getPositionStream(locationSettings: locationSettings)
+              .listen((Position position) {
+        print("📍 Nuevo punto recibido: ${position.latitude}, ${position.longitude}");
 
         final point = LocationPoint(
-          latitude: locData.latitude!,
-          longitude: locData.longitude!,
-          elevation: locData.altitude ?? 0,
-          timestamp: DateTime.fromMillisecondsSinceEpoch(locData.time!.toInt()),
+          latitude: position.latitude,
+          longitude: position.longitude,
+          elevation: position.altitude,
+          timestamp: position.timestamp ?? DateTime.now(),
         );
 
         locationStreamController.add(point);
+        sendPort?.send([point.latitude, point.longitude]);
       });
 
-      print('📡 Suscripción a onLocationChanged iniciada');
+      print("📡 Suscripción a getPositionStream iniciada");
     } catch (e, st) {
-      print('❌ Error en onStart ForegroundTaskHandler: $e');
+      print("❌ Error en onStart ForegroundTaskHandler: $e");
       print(st);
     }
   }
 
-
   @override
   Future<void> onDestroy(DateTime timestamp, SendPort? sendPort) async {
-    await _locationSubscription?.cancel();
+    print("🛑 ForegroundTaskHandler.onDestroy()");
+    await _positionSubscription?.cancel();
     await locationStreamController.close();
   }
 
+  @override
+  void onNotificationPressed() {
+    print("🔔 Notificación presionada");
+  }
 
   @override
-  void onNotificationPressed() {}
-  
-  @override
-  void onRepeatEvent(DateTime timestamp, SendPort? sendPort) {
-  }
+  void onRepeatEvent(DateTime timestamp, SendPort? sendPort) {}
 }

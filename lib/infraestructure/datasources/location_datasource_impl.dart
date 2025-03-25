@@ -26,9 +26,7 @@ import 'foreground_task_handler.dart';
 class LocationDatasourceImpl implements LocationDatasource {
   @override
   Stream<LocationPoint> getLocationStream() {
-
     print('🔄 getLocationStream() llamado');
-    
     return ForegroundTaskHandler.locationStreamController.stream;
   }
 }
