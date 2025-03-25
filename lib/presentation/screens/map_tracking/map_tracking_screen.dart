@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:login_app/infraestructure/datasources/foreground_task_handler.dart';
 import 'package:login_app/main.dart';
 import 'package:login_app/presentation/providers/location/track_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
