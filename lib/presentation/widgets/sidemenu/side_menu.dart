@@ -79,7 +79,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         title: 'Salir',
         icon: Icons.logout,
         onTap: (ref) { // ✅ Pasa `ref` correctamente
-          ref.read(authProvider.notifier).logout();
+          ref.read(authProvider.notifier).logout(context);
         },
       ) :
 

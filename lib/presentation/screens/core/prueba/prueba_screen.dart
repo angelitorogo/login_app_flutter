@@ -129,7 +129,7 @@ class PruebaScreen extends ConsumerWidget {
 
                     onPressed: () {
                       
-                      ref.read(authProvider.notifier).logout();
+                      ref.read(authProvider.notifier).logout(context);
                       
                     },
                     label: const Text('Logout', style: TextStyle(fontSize: 20)),

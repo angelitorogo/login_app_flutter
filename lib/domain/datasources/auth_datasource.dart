@@ -15,7 +15,7 @@ abstract class AuthDatasource {
 
   Future<UserEntity> authVerifyUser();
 
-  Future<void> logout(); 
+  Future<void> logout(BuildContext context); 
 
   Future<Uint8List?> fetchUserImage(String imagePath);
 

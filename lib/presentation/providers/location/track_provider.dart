@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gpx/gpx.dart';
-import 'package:login_app/domain/entities/location_point.dart';
-import 'package:login_app/infraestructure/repositories/location_repository_impl.dart';
+import 'package:login_app/presentation/providers/location/location_repository_provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'location_repository_provider.dart';
+import 'package:login_app/domain/entities/location_point.dart';
+import '../../../infraestructure/repositories/location_repository_impl.dart';
 
 class TrackState {
   final bool isTracking;
@@ -33,8 +33,10 @@ class TrackNotifier extends StateNotifier<TrackState> {
 
   void startTracking() {
     state = state.copyWith(isTracking: true, points: []);
-    _locationSubscription =
-        locationRepository.getLocationStream().listen((point) {
+    _locationSubscription = locationRepository.getLocationStream().listen((point) {
+
+      print('📡 TrackNotifier recibió punto: ${point.latitude}, ${point.longitude}');
+      
       state = state.copyWith(points: [...state.points, point]);
     });
   }
@@ -69,33 +71,17 @@ class TrackNotifier extends StateNotifier<TrackState> {
 
     // Guardamos archivo GPX
     await saveGpxToPublicDocuments(file);
-    //await saveGpxToAppDirectory(file);
 
     return file;
   }
 
   Future<void> saveGpxToPublicDocuments(File file) async {
-    final downloadsDir = Directory('/storage/emulated/0/Download');
-
+    final downloadsDir = Directory('/storage/emulated/0/Download/GPX');
     if (!(await downloadsDir.exists())) {
       await downloadsDir.create(recursive: true);
     }
-
     final publicFile = File('${downloadsDir.path}/${file.uri.pathSegments.last}');
     await file.copy(publicFile.path);
-  }
-
-
-  Future<void> saveGpxToAppDirectory(File file) async {
-    final directory = await getExternalStorageDirectory();
-    final gpxDir = Directory('${directory!.path}/GPX');
-    
-    if (!(await gpxDir.exists())) {
-      await gpxDir.create(recursive: true);
-    }
-
-    final targetFile = File('${gpxDir.path}/${file.uri.pathSegments.last}');
-    await file.copy(targetFile.path);
   }
 
   @override

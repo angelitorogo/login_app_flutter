@@ -62,15 +62,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> loadSession() async {
     final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString('user');
+    //final csrfToken = prefs.setString('csrf', state.csrfToken!);
     final isAuthenticated = prefs.getBool('isAuthenticated') ?? false;
 
     if (userJson != null && isAuthenticated) {
       final user = UserEntity.fromJson(jsonDecode(userJson)); // Asegúrate de que `UserEntity` tenga un método `fromJson`
-      state = state.copyWith(isAuthenticated: true, user: user);
+      state = state.copyWith(isAuthenticated: true, user: user); //csrfToken: csrfToken.toString());
     }
   }
 
-  Future<void> updateUser(ProfileFormState profileState, WidgetRef ref) async {
+  Future<void> updateUser(BuildContext context, profileState, WidgetRef ref) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
      try {
@@ -86,7 +87,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         language: ref.read(authProvider).user!.language,
       );
 
-      final UserUpdatedResponse userUpdated  = await authRepository.updateUser(updatedUser );
+      final UserUpdatedResponse userUpdated  = await authRepository.updateUser(updatedUser);
 
       //print("📤 Respuesta del backend: ${userUpdated}");
 
@@ -106,6 +107,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       ref.read(profileProvider.notifier).resetForm(userTempUpdated);
 
     } catch (error) {
+      // ignore: use_build_context_synchronously
+      logout(context);
+      if (context.mounted) {
+        GoRouter.of(context).go('/login');
+      }
       state = state.copyWith(isLoading: false, errorMessage: error.toString());
     }
 
@@ -114,12 +120,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> saveSession(UserEntity user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user', jsonEncode(user.toJson())); // Asegúrate de que `UserEntity` tenga un método `toJson`
+    //await prefs.setString('csrf', state.csrfToken!);
     await prefs.setBool('isAuthenticated', true);
   }
 
   Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user');
+    //await prefs.remove('csrf');
     await prefs.setBool('isAuthenticated', false);
   }
 
@@ -184,13 +192,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   }
 
-  Future<void> logout() async {
+  Future<void> logout(context) async {
 
     state = state.copyWith(isLoading: true);
 
     try {
 
-      await authRepository.logout();
+      await authRepository.logout(context);
 
       await clearSession(); // ✅ Limpiar sesión en SharedPreferences
 
@@ -199,6 +207,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = const AuthState();
 
       state = state.copyWith(isLoading: false, user: null, isAuthenticated: false);
+
+      
+      
       /*
       state = const AuthState(
         isAuthenticated: false,

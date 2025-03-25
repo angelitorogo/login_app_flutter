@@ -1,3 +1,4 @@
+/*
 import 'package:location/location.dart';
 import 'package:login_app/domain/datasources/location_datasource.dart';
 import '../../domain/entities/location_point.dart';
@@ -15,5 +16,19 @@ class LocationDatasourceImpl implements LocationDatasource {
       elevation: locData.altitude ?? 0,
       timestamp: DateTime.fromMillisecondsSinceEpoch(locData.time!.toInt()),
     ));
+  }
+}
+*/
+import '../../domain/entities/location_point.dart';
+import '../../domain/datasources/location_datasource.dart';
+import 'foreground_task_handler.dart';
+
+class LocationDatasourceImpl implements LocationDatasource {
+  @override
+  Stream<LocationPoint> getLocationStream() {
+
+    print('🔄 getLocationStream() llamado');
+    
+    return ForegroundTaskHandler.locationStreamController.stream;
   }
 }

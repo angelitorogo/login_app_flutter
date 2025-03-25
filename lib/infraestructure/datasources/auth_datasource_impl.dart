@@ -29,7 +29,7 @@ class AuthDatasourceImpl  extends AuthDatasource{
 
   @override
   Future<void> checkCookies() async {
-    /*final cookies = */await _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
+    await _cookieJar.loadForRequest(Uri.parse('https://cookies.argomez.com'));
     //print('Cookies guardadas: $cookies');
   }
 
@@ -110,7 +110,7 @@ class AuthDatasourceImpl  extends AuthDatasource{
   }
   
   @override
-  Future<void> logout() async {
+  Future<void> logout(BuildContext context) async {
 
     try {
 
@@ -216,6 +216,7 @@ Future<UserUpdatedResponse> updateUser(UserEntity user) async {
   if (response.statusCode != 200) {
     throw Exception(response.data['message']);
   }
+
 
   final UserUpdatedResponse userUpdated = UserUpdatedResponse(
     id: response.data['id'], 

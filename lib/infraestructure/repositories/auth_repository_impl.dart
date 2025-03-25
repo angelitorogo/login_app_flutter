@@ -32,8 +32,8 @@ class AuthRepositoryImpl extends AuthRepository{
   }
   
   @override
-  Future<void> logout() {
-    return datasource.logout();
+  Future<void> logout(BuildContext context) {
+    return datasource.logout(context);
   }
 
   @override
